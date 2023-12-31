@@ -44,7 +44,7 @@ function MainPage({ user, onLogout }) {
       const data = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         inputData: doc.data().inputData,
-        selectedDate: doc.data().selectedDate, // Ensure selectedDate is included
+        selectedDate: doc.data().selectedDate, 
       }));
       setDocuments(data);
     } catch (error) {
