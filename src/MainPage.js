@@ -2,17 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { googleLogout } from '@react-oauth/google';
 import axios from 'axios';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs,  deleteDoc, doc  } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import Alert from '@mui/material/Alert'; // Add this import
-import './App.css';
+import Alert from '@mui/material/Alert';
 import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
-
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -21,34 +19,33 @@ const firebaseConfig = {
   storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
   messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
   appId: process.env.REACT_APP_APP_ID,
-  measurementId: process.env.REACT_APP_MEASUREMENT_ID
+  measurementId: process.env.REACT_APP_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
 
 function MainPage({ user, onLogout }) {
-  const [profile, setProfile] = useState([]);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [inputData, setInputData] = useState('');
   const [userDocumentId, setUserDocumentId] = useState('');
   const [documents, setDocuments] = useState([]);
-  
-  // New state for alert
+  const [selectedDate, setSelectedDate] = useState('');
+
   const [showAlert, setShowAlert] = useState(false);
-  const [alertSeverity, setAlertSeverity] = useState('success'); // success, error, warning, info
+  const [alertSeverity, setAlertSeverity] = useState('success');
   const [alertMessage, setAlertMessage] = useState('');
+
 
   const readUserData = useCallback(async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'users', userDocumentId, 'data'));
-      const data = [];
-      querySnapshot.forEach((doc) => {
-        data.push({ id: doc.id, inputData: doc.data().inputData });
-      });
+      const data = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        inputData: doc.data().inputData,
+        selectedDate: doc.data().selectedDate, // Ensure selectedDate is included
+      }));
       setDocuments(data);
     } catch (error) {
       console.error('Error reading user data from Firestore: ', error);
@@ -59,10 +56,9 @@ function MainPage({ user, onLogout }) {
     try {
       await deleteDoc(doc(db, 'users', userDocumentId, 'data', taskId));
       console.log('Document deleted successfully');
-      readUserData(); // Refresh the task list after deletion
+      readUserData();
     } catch (error) {
       console.error('Error deleting document: ', error);
-      // You can also trigger an error alert here if needed
       setAlertSeverity('error');
       setAlertMessage('Error deleting document. Please try again.');
       setShowAlert(true);
@@ -72,34 +68,44 @@ function MainPage({ user, onLogout }) {
   const handleSubmit = async () => {
     try {
       if (userDocumentId) {
+        // Validate inputData length
+        if (inputData.length === 0) {
+          setAlertSeverity('error');
+          setAlertMessage('Task too short. Task must be more than 0 characters.');
+          setShowAlert(true);
+          return;
+        } else if (inputData.length > 100) {
+          setAlertSeverity('error');
+          setAlertMessage('Task too long. Task must be under 100 characters.');
+          setShowAlert(true);
+          return;
+        } else if (selectedDate === "") {
+          setAlertSeverity('error');
+          setAlertMessage('Must choose task due date.');
+          setShowAlert(true);
+          return;
+        }
+  
         // Check the current number of tasks for the user
         const querySnapshot = await getDocs(collection(db, 'users', userDocumentId, 'data'));
         const currentTaskCount = querySnapshot.size;
-
+  
         if (currentTaskCount >= 11) {
           // Trigger alert if the user has reached the maximum limit of 10 tasks.
           setAlertSeverity('error');
           setAlertMessage('You have reached the maximum limit of 10 tasks.');
           setShowAlert(true);
-        } else if (inputData.length > 100) {
-          setAlertSeverity('error');
-          setAlertMessage('Task Too long. Task must be under 100 characters.');
-          setShowAlert(true);
-        } 
-          else if (inputData.length < 1) {
-            setAlertSeverity('error');
-            setAlertMessage('Task too short. Task must be more than 0 characters.');
-            setShowAlert(true);
-          }
-         else {
+        } else {
           // If the user has not reached the limit, add the new task
           const docRef = await addDoc(collection(db, 'users', userDocumentId, 'data'), {
             inputData,
+            selectedDate,
             timestamp: new Date(),
           });
-
+  
           console.log('Document written with ID: ', docRef.id);
           setInputData('');
+          setSelectedDate('');
           readUserData();
         }
       } else {
@@ -107,7 +113,6 @@ function MainPage({ user, onLogout }) {
       }
     } catch (error) {
       console.error('Error adding document: ', error);
-      // You can also trigger an error alert here if needed
       setAlertSeverity('error');
       setAlertMessage('Error adding document. Please try again.');
       setShowAlert(true);
@@ -172,13 +177,13 @@ function MainPage({ user, onLogout }) {
           </div>
         </Toolbar>
       </AppBar>
-      
+
       {showAlert && (
         <Alert severity={alertSeverity} onClose={() => setShowAlert(false)}>
           {alertMessage}
         </Alert>
       )}
-      
+
       {loading ? (
         <CircularProgress color="inherit" />
       ) : (
@@ -188,12 +193,15 @@ function MainPage({ user, onLogout }) {
           <ul style={{ width: '100%', listStyleType: 'none', padding: 0 }}>
             {documents.map((doc) => (
               <li key={doc.id} style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-                <Paper elevation={12} style={{ padding: '10px', textAlign: 'center', width: '50%' }}>
+                <Paper elevation={12} style={{ padding: '10px', textAlign: 'center', width: '50%', flexDirection: 'column' }}>
                   <p>{`${doc.inputData}`}</p>
-                  
+                  <p>Date: {doc.selectedDate}</p>
+                  <div>
+                  <input type="checkbox" id="myCheckbox" name="myCheckbox" ></input>
+                  </div>
                   <Button
                     variant="contained"
-                    style={{ backgroundColor: '#FF6666', color: 'white', marginLeft: '75%',  width: '4%', fontSize: '10px' }}
+                    style={{ backgroundColor: '#FF6666', color: 'white', marginTop: '10px', width: '4%', fontSize: '10px' }}
                     onClick={() => handleDelete(doc.id)}
                   >
                     Delete
@@ -210,13 +218,25 @@ function MainPage({ user, onLogout }) {
             id="outlined-multiline-static"
             label="Enter Task"
             multiline
-            rows={4} // Set the number of rows to determine the initial height
+            rows={4}
             value={inputData}
             onChange={(e) => setInputData(e.target.value)}
             variant="outlined"
             style={{ width: '50%', display: 'flex', flexDirection: 'column' }}
           />
-          <div style={{ paddingTop: '30px' }}>
+          <div style={{ paddingTop: '30px', flexDirection: 'column', display: 'flex' }}>
+            <div style={{ paddingBottom: '10px' }}>
+              <p style={{paddingLeft: '10%'}}>Task Due Date</p>
+              <input
+                type="date"
+                id="datepicker"
+                name="datepicker"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+              />
+            </div>
+            <br></br>
+            <br></br>
             <Button
               variant="contained"
               style={{ backgroundColor: '#AFB3F7', color: 'black' }}
