@@ -11,6 +11,7 @@ import Alert from '@mui/material/Alert'; // Add this import
 import './App.css';
 import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
+import CircularProgress from '@mui/material/CircularProgress';
 
 
 const firebaseConfig = {
@@ -179,7 +180,7 @@ function MainPage({ user, onLogout }) {
       )}
       
       {loading ? (
-        <p>Loading...</p>
+        <CircularProgress color="inherit" />
       ) : (
         <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', width: '100%' }}>
           <br />
@@ -189,10 +190,10 @@ function MainPage({ user, onLogout }) {
               <li key={doc.id} style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
                 <Paper elevation={12} style={{ padding: '10px', textAlign: 'center', width: '50%' }}>
                   <p>{`${doc.inputData}`}</p>
-                  {/* Delete button */}
+                  
                   <Button
                     variant="contained"
-                    style={{ backgroundColor: '#FF6666', color: 'white', marginTop: '8px' }}
+                    style={{ backgroundColor: '#FF6666', color: 'white', marginLeft: '75%',  width: '4%', fontSize: '10px' }}
                     onClick={() => handleDelete(doc.id)}
                   >
                     Delete
