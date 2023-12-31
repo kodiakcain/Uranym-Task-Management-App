@@ -59,7 +59,7 @@ function MainPage({ user, onLogout }) {
         const querySnapshot = await getDocs(collection(db, 'users', userDocumentId, 'data'));
         const currentTaskCount = querySnapshot.size;
 
-        if (currentTaskCount >= 10) {
+        if (currentTaskCount >= 11) {
           // Trigger alert if the user has reached the maximum limit of 10 tasks.
           setAlertSeverity('error');
           setAlertMessage('You have reached the maximum limit of 10 tasks.');
