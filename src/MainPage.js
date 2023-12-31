@@ -6,6 +6,8 @@ import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import './App.css';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -29,18 +31,6 @@ function MainPage({ user, onLogout }) {
   const [inputData, setInputData] = useState('');
   const [userDocumentId, setUserDocumentId] = useState('');
   const [documents, setDocuments] = useState([]);
-
-  const addTestData = async () => {
-    try {
-      const docRef = await addDoc(collection(db, 'users'), {
-        randomField: 'Hello, Firestore!',
-        timestamp: new Date(),
-      });
-      console.log('Test document written with ID: ', docRef.id);
-    } catch (error) {
-      console.error('Error adding test document: ', error);
-    }
-  };
 
   const readUserData = useCallback(async () => {
     try {
@@ -112,26 +102,37 @@ function MainPage({ user, onLogout }) {
 
   return (
     <div>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            React Google Login
-          </Typography>
-          <button onClick={logOut}>Log out</button>
-        </Toolbar>
-      </AppBar>
-      <h2>Main Page</h2>
+      <AppBar position="static" sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#171A21', width: '100%' }}>
+  <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      <Typography variant="h6" component="div" sx={{paddingLeft: '30px'}}>
+        Dashboard
+      </Typography>
+    </div>
+    {profile && <img src={profile.picture} alt="user profile" style={{ width: '50px', height: '50px', borderRadius: '30px' }} />}
+    <div style={{paddingRight: '30px'}}>
+    <Button
+      variant="contained"
+      style={{ backgroundColor: '#AFB3F7', color: 'black',}}
+      onClick={() => logOut()}
+    >
+      Sign Out
+    </Button>
+    </div>
+    
+  </Toolbar>
+</AppBar>
       {loading ? (
         <p>Loading...</p>
       ) : (
         <div>
-          <img src={profile.picture} alt="user profile" />
-          <h3>User Logged in</h3>
-          <p>Name: {profile.name}</p>
-          <p>Email Address: {profile.email}</p>
           <br />
           <br />
-          <button onClick={addTestData}>Add Test Data to Firestore</button>
+          <ul>
+            {documents.map((doc) => (
+              <p key={doc.id}>{`${doc.inputData}`}</p>
+            ))}
+          </ul>
           <br />
           <br />
           <input
@@ -140,15 +141,9 @@ function MainPage({ user, onLogout }) {
             value={inputData}
             onChange={(e) => setInputData(e.target.value)}
           />
-          <button onClick={handleSubmit}>Submit to Firestore</button>
+          <button onClick={handleSubmit}>Add Task</button>
           <br />
           <br />
-
-          <ul>
-            {documents.map((doc) => (
-              <p key={doc.id}>{`${doc.inputData}`}</p>
-            ))}
-          </ul>
         </div>
       )}
     </div>

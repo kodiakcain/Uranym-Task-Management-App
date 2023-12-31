@@ -21,7 +21,7 @@ function Login({ onLogin }) {
           </Typography>
           <Button
             variant="contained"
-            style={{ backgroundColor: '#AFB3F7', color: 'black' }} // Set background and text color
+            style={{ backgroundColor: '#AFB3F7', color: 'black' }}
             onClick={() => login()}
           >
             Sign in/Sign up
