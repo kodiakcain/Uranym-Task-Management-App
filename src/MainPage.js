@@ -159,7 +159,7 @@ function MainPage({ user, onLogout }) {
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <div style={{justifyContent: 'center', alignItems: 'center'}}>
+        <div style={{justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column'}}>
           <br />
           <br />
           <ul>
@@ -179,9 +179,9 @@ function MainPage({ user, onLogout }) {
         value={inputData}
         onChange={(e) => setInputData(e.target.value)}
         variant="outlined"
-        style={{width: '500px'}}
+        style={{width: '500px', display: 'flex', flexDirection: 'column'}}
       />
-      <div style={{paddingLeft: '225px', paddingTop: '30px'}}>
+      <div style={{paddingTop: '30px'}}>
       <button onClick={handleSubmit}>Add Task</button>
       </div>
         </div>
