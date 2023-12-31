@@ -1,27 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { googleLogout } from '@react-oauth/google';
 import axios from 'axios';
 import { initializeApp } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
 import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 
-
 const firebaseConfig = {
-    apiKey: process.env.REACT_APP_API_KEY,
-    authDomain: process.env.REACT_APP_AUTH_DOMAIN,
-    projectId: process.env.REACT_APP_PROJECT_ID,
-    storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
-    messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
-    appId: process.env.REACT_APP_APP_ID,
-    measurementId: process.env.REACT_APP_MEASUREMENT_ID
-  };
+  apiKey: process.env.REACT_APP_API_KEY,
+  authDomain: process.env.REACT_APP_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_APP_ID,
+  measurementId: process.env.REACT_APP_MEASUREMENT_ID
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
@@ -45,7 +42,7 @@ function MainPage({ user, onLogout }) {
     }
   };
 
-  const readUserData = async () => {
+  const readUserData = useCallback(async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'users', userDocumentId, 'data'));
       const data = [];
@@ -56,7 +53,7 @@ function MainPage({ user, onLogout }) {
     } catch (error) {
       console.error('Error reading user data from Firestore: ', error);
     }
-  };
+  }, [userDocumentId, setDocuments]);
 
   const handleSubmit = async () => {
     try {
@@ -111,7 +108,7 @@ function MainPage({ user, onLogout }) {
     if (userDocumentId) {
       readUserData();
     }
-  }, [userDocumentId]);
+  }, [userDocumentId, readUserData]);
 
   return (
     <div>
@@ -128,7 +125,7 @@ function MainPage({ user, onLogout }) {
         <p>Loading...</p>
       ) : (
         <div>
-          <img src={profile.picture} alt="user image" />
+          <img src={profile.picture} alt="user profile" />
           <h3>User Logged in</h3>
           <p>Name: {profile.name}</p>
           <p>Email Address: {profile.email}</p>
