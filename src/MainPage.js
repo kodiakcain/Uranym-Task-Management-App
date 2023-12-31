@@ -48,13 +48,24 @@ function MainPage({ user, onLogout }) {
   const handleSubmit = async () => {
     try {
       if (userDocumentId) {
-        const docRef = await addDoc(collection(db, 'users', userDocumentId, 'data'), {
-          inputData,
-          timestamp: new Date(),
-        });
-        console.log('Document written with ID: ', docRef.id);
-        setInputData('');
-        readUserData();
+        // Check the current number of tasks for the user
+        const querySnapshot = await getDocs(collection(db, 'users', userDocumentId, 'data'));
+        const currentTaskCount = querySnapshot.size;
+  
+        if (currentTaskCount >= 10) {
+          console.error('User has reached the maximum limit of 10 tasks.');
+          // Optionally, you can provide a user-friendly message or handle this situation differently
+        } else {
+          // If the user has not reached the limit, add the new task
+          const docRef = await addDoc(collection(db, 'users', userDocumentId, 'data'), {
+            inputData,
+            timestamp: new Date(),
+          });
+  
+          console.log('Document written with ID: ', docRef.id);
+          setInputData('');
+          readUserData();
+        }
       } else {
         console.error('User document ID is undefined or null.');
       }
