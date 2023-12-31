@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { googleLogout } from '@react-oauth/google';
 import axios from 'axios';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs,  deleteDoc, doc  } from 'firebase/firestore';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -10,6 +10,8 @@ import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert'; // Add this import
 import './App.css';
 import TextField from '@mui/material/TextField';
+import Paper from '@mui/material/Paper';
+
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -52,6 +54,20 @@ function MainPage({ user, onLogout }) {
     }
   }, [userDocumentId, setDocuments]);
 
+  const handleDelete = async (taskId) => {
+    try {
+      await deleteDoc(doc(db, 'users', userDocumentId, 'data', taskId));
+      console.log('Document deleted successfully');
+      readUserData(); // Refresh the task list after deletion
+    } catch (error) {
+      console.error('Error deleting document: ', error);
+      // You can also trigger an error alert here if needed
+      setAlertSeverity('error');
+      setAlertMessage('Error deleting document. Please try again.');
+      setShowAlert(true);
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       if (userDocumentId) {
@@ -67,8 +83,14 @@ function MainPage({ user, onLogout }) {
         } else if (inputData.length > 100) {
           setAlertSeverity('error');
           setAlertMessage('Task Too long. Task must be under 100 characters.');
-          setShowAlert(true); 
-        } else {
+          setShowAlert(true);
+        } 
+          else if (inputData.length < 1) {
+            setAlertSeverity('error');
+            setAlertMessage('Task too short. Task must be more than 0 characters.');
+            setShowAlert(true);
+          }
+         else {
           // If the user has not reached the limit, add the new task
           const docRef = await addDoc(collection(db, 'users', userDocumentId, 'data'), {
             inputData,
@@ -129,7 +151,7 @@ function MainPage({ user, onLogout }) {
   }, [userDocumentId, readUserData]);
 
   return (
-    <div style={{justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column',}}>
+    <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column' }}>
       <AppBar position="static" sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#171A21', width: '100%' }}>
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -159,12 +181,24 @@ function MainPage({ user, onLogout }) {
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <div style={{justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column'}}>
+        <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', width: '100%' }}>
           <br />
           <br />
-          <ul>
+          <ul style={{ width: '100%', listStyleType: 'none', padding: 0 }}>
             {documents.map((doc) => (
-              <p key={doc.id}>{`${doc.inputData}`}</p>
+              <li key={doc.id} style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+                <Paper elevation={12} style={{ padding: '10px', textAlign: 'center', width: '50%' }}>
+                  <p>{`${doc.inputData}`}</p>
+                  {/* Delete button */}
+                  <Button
+                    variant="contained"
+                    style={{ backgroundColor: '#FF6666', color: 'white', marginTop: '8px' }}
+                    onClick={() => handleDelete(doc.id)}
+                  >
+                    Delete
+                  </Button>
+                </Paper>
+              </li>
             ))}
           </ul>
           <br />
@@ -172,20 +206,25 @@ function MainPage({ user, onLogout }) {
           <br />
           <br />
           <TextField
-        id="outlined-multiline-static"
-        label="Enter Task"
-        multiline
-        rows={4} // Set the number of rows to determine the initial height
-        value={inputData}
-        onChange={(e) => setInputData(e.target.value)}
-        variant="outlined"
-        style={{width: '100%', display: 'flex', flexDirection: 'column'}}
-      />
-      <div style={{paddingTop: '30px'}}>
-      <button onClick={handleSubmit}>Add Task</button>
-      </div>
+            id="outlined-multiline-static"
+            label="Enter Task"
+            multiline
+            rows={4} // Set the number of rows to determine the initial height
+            value={inputData}
+            onChange={(e) => setInputData(e.target.value)}
+            variant="outlined"
+            style={{ width: '50%', display: 'flex', flexDirection: 'column' }}
+          />
+          <div style={{ paddingTop: '30px' }}>
+            <Button
+              variant="contained"
+              style={{ backgroundColor: '#AFB3F7', color: 'black' }}
+              onClick={handleSubmit}
+            >
+              Add Task
+            </Button>
+          </div>
         </div>
-        
       )}
     </div>
   );
