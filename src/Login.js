@@ -16,7 +16,7 @@ function Login({ onLogin }) {
     <div className='App'>
       <AppBar position="static" sx={{ backgroundColor: '#171A21', width: '100%' }}>
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, paddingLeft: '70px' }}>
             Uranym
           </Typography>
           <Button

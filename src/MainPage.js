@@ -7,7 +7,9 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert'; // Add this import
 import './App.css';
+import TextField from '@mui/material/TextField';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -31,6 +33,11 @@ function MainPage({ user, onLogout }) {
   const [inputData, setInputData] = useState('');
   const [userDocumentId, setUserDocumentId] = useState('');
   const [documents, setDocuments] = useState([]);
+  
+  // New state for alert
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertSeverity, setAlertSeverity] = useState('success'); // success, error, warning, info
+  const [alertMessage, setAlertMessage] = useState('');
 
   const readUserData = useCallback(async () => {
     try {
@@ -51,17 +58,23 @@ function MainPage({ user, onLogout }) {
         // Check the current number of tasks for the user
         const querySnapshot = await getDocs(collection(db, 'users', userDocumentId, 'data'));
         const currentTaskCount = querySnapshot.size;
-  
+
         if (currentTaskCount >= 10) {
-          console.error('User has reached the maximum limit of 10 tasks.');
-          
+          // Trigger alert if the user has reached the maximum limit of 10 tasks.
+          setAlertSeverity('error');
+          setAlertMessage('You have reached the maximum limit of 10 tasks.');
+          setShowAlert(true);
+        } else if (inputData.length > 100) {
+          setAlertSeverity('error');
+          setAlertMessage('Task Too long. Task must be under 100 characters.');
+          setShowAlert(true); 
         } else {
-          
+          // If the user has not reached the limit, add the new task
           const docRef = await addDoc(collection(db, 'users', userDocumentId, 'data'), {
             inputData,
             timestamp: new Date(),
           });
-  
+
           console.log('Document written with ID: ', docRef.id);
           setInputData('');
           readUserData();
@@ -71,6 +84,10 @@ function MainPage({ user, onLogout }) {
       }
     } catch (error) {
       console.error('Error adding document: ', error);
+      // You can also trigger an error alert here if needed
+      setAlertSeverity('error');
+      setAlertMessage('Error adding document. Please try again.');
+      setShowAlert(true);
     }
   };
 
@@ -112,31 +129,37 @@ function MainPage({ user, onLogout }) {
   }, [userDocumentId, readUserData]);
 
   return (
-    <div>
+    <div style={{justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column',}}>
       <AppBar position="static" sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#171A21', width: '100%' }}>
-  <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-    <div style={{ display: 'flex', alignItems: 'center' }}>
-      <Typography variant="h6" component="div" sx={{paddingLeft: '30px'}}>
-        Dashboard
-      </Typography>
-    </div>
-    {profile && <img src={profile.picture} alt="user profile" style={{ width: '50px', height: '50px', borderRadius: '30px' }} />}
-    <div style={{paddingRight: '30px'}}>
-    <Button
-      variant="contained"
-      style={{ backgroundColor: '#AFB3F7', color: 'black',}}
-      onClick={() => logOut()}
-    >
-      Sign Out
-    </Button>
-    </div>
-    
-  </Toolbar>
-</AppBar>
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant="h6" component="div" sx={{ paddingLeft: '30px' }}>
+              Dashboard
+            </Typography>
+          </div>
+          {profile && <img src={profile.picture} alt="user profile" style={{ width: '50px', height: '50px', borderRadius: '30px' }} />}
+          <div style={{ paddingRight: '30px' }}>
+            <Button
+              variant="contained"
+              style={{ backgroundColor: '#AFB3F7', color: 'black' }}
+              onClick={() => logOut()}
+            >
+              Sign Out
+            </Button>
+          </div>
+        </Toolbar>
+      </AppBar>
+      
+      {showAlert && (
+        <Alert severity={alertSeverity} onClose={() => setShowAlert(false)}>
+          {alertMessage}
+        </Alert>
+      )}
+      
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <div>
+        <div style={{justifyContent: 'center', alignItems: 'center'}}>
           <br />
           <br />
           <ul>
@@ -146,16 +169,23 @@ function MainPage({ user, onLogout }) {
           </ul>
           <br />
           <br />
-          <input
-            type="text"
-            placeholder="Enter data"
-            value={inputData}
-            onChange={(e) => setInputData(e.target.value)}
-          />
-          <button onClick={handleSubmit}>Add Task</button>
           <br />
           <br />
+          <TextField
+        id="outlined-multiline-static"
+        label="Enter Task"
+        multiline
+        rows={4} // Set the number of rows to determine the initial height
+        value={inputData}
+        onChange={(e) => setInputData(e.target.value)}
+        variant="outlined"
+        style={{width: '500px'}}
+      />
+      <div style={{paddingLeft: '225px', paddingTop: '30px'}}>
+      <button onClick={handleSubmit}>Add Task</button>
+      </div>
         </div>
+        
       )}
     </div>
   );
