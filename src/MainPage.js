@@ -179,7 +179,7 @@ function MainPage({ user, onLogout }) {
         value={inputData}
         onChange={(e) => setInputData(e.target.value)}
         variant="outlined"
-        style={{width: '500px', display: 'flex', flexDirection: 'column'}}
+        style={{width: '100%', display: 'flex', flexDirection: 'column'}}
       />
       <div style={{paddingTop: '30px'}}>
       <button onClick={handleSubmit}>Add Task</button>
