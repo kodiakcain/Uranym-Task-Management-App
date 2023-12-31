@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { googleLogout } from '@react-oauth/google';
 import axios from 'axios';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -36,6 +36,57 @@ function MainPage({ user, onLogout }) {
   const [showAlert, setShowAlert] = useState(false);
   const [alertSeverity, setAlertSeverity] = useState('success');
   const [alertMessage, setAlertMessage] = useState('');
+  const [taskStates, setTaskStates] = useState({});
+
+  const handleCheckBox = async (taskId) => {
+    try {
+      const taskRef = doc(db, 'users', userDocumentId, 'data', taskId);
+
+      // Use the state updater function to get the most recent state
+      setTaskStates((prevStates) => {
+        const updatedStates = { ...prevStates, [taskId]: !prevStates[taskId] };
+
+        // Update the Firestore document with the new state
+        updateDoc(taskRef, {
+          isChecked: updatedStates[taskId],
+        });
+
+        // Return the updated state
+        return updatedStates;
+      });
+
+      console.log('Checkbox state updated successfully');
+      readUserData();
+    } catch (error) {
+      console.error('Error updating checkbox state: ', error);
+      setAlertSeverity('error');
+      setAlertMessage('Error updating checkbox state. Please try again.');
+      setShowAlert(true);
+    }
+  };
+
+  // Fetch initial data when the component mounts
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'users', userDocumentId, 'data'));
+        const initialStates = {};
+
+        // Map the initial states based on the data from Firestore
+        querySnapshot.forEach((doc) => {
+          initialStates[doc.id] = doc.data().isChecked || false;
+        });
+
+        setTaskStates(initialStates);
+      } catch (error) {
+        console.error('Error fetching initial checkbox states: ', error);
+      }
+    };
+
+    if (userDocumentId) {
+      fetchData();
+    }
+  }, [userDocumentId]);
 
 
   const readUserData = useCallback(async () => {
@@ -44,7 +95,8 @@ function MainPage({ user, onLogout }) {
       const data = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         inputData: doc.data().inputData,
-        selectedDate: doc.data().selectedDate, 
+        selectedDate: doc.data().selectedDate,
+        isChecked: doc.data().isChecked,
       }));
       setDocuments(data);
     } catch (error) {
@@ -101,6 +153,7 @@ function MainPage({ user, onLogout }) {
             inputData,
             selectedDate,
             timestamp: new Date(),
+            isChecked : false,
           });
   
           console.log('Document written with ID: ', docRef.id);
@@ -197,7 +250,11 @@ function MainPage({ user, onLogout }) {
                   <p>{`${doc.inputData}`}</p>
                   <p>Date: {doc.selectedDate}</p>
                   <div>
-                  <input type="checkbox" id="myCheckbox" name="myCheckbox" ></input>
+                  <input type="checkbox"
+                id={`myCheckbox_${doc.id}`}
+                name={`myCheckbox_${doc.id}`}
+                checked={taskStates[doc.id] || false} // Use taskStates to manage individual checkbox state
+                onChange={() => handleCheckBox(doc.id)} ></input>
                   </div>
                   <Button
                     variant="contained"
