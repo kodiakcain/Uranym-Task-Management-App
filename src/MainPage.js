@@ -230,6 +230,7 @@ function MainPage({ user, onLogout }) {
   }, [userDocumentId, readUserData]);
 
   return (
+    <div style={{ backgroundColor: ' #eaf2f8 ', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
     <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', }}>
       <AppBar position="static" sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#171A21', width: '100%' }}>
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
@@ -267,7 +268,7 @@ function MainPage({ user, onLogout }) {
           <ul style={{ width: '100%', listStyleType: 'none', padding: 0 }}>
             {documents.map((doc) => (
               <li key={doc.id} style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-                <Paper elevation={12} style={{ padding: '10px', textAlign: 'center', width: '50%', flexDirection: 'column' }}>
+                <Paper elevation={12} style={{ padding: '10px', textAlign: 'center', width: '50%', flexDirection: 'column', backgroundColor: '#AFB3F7' }}>
                   <p>{`${doc.inputData}`}</p>
                   <p>Date: {doc.selectedDate}</p>
                   <div>
@@ -343,6 +344,7 @@ function MainPage({ user, onLogout }) {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
