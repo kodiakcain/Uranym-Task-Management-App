@@ -302,10 +302,10 @@ function MainPage({ user, onLogout }) {
             variant="outlined"
             style={{ width: '50%', display: 'flex', flexDirection: 'column' }}
           />
-          <div style={{ paddingTop: '30px', flexDirection: 'column', display: 'flex' }}>
+          <div style={{ paddingTop: '30px', flexDirection: 'column', display: 'flex', justifyContent: 'center' }}>
             <div style={{ paddingBottom: '10px' }}>
-              <p style={{paddingLeft: '35%'}}>Task Due Date</p>
-              <div style={{paddingLeft: '32%'}}>
+              <p style={{paddingLeft: '10%', textDecorationLine: 'underline'}}>Task Due Date</p>
+              <div>
               <input
                 type="date"
                 id="datepicker"
