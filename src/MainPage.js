@@ -330,6 +330,7 @@ function MainPage({ user, onLogout }) {
               marginRight: '10px',
               marginBottom: '10px',
             }}>
+            <div className='piechart'>
             <PieChart
       series={[
         {
@@ -340,11 +341,11 @@ function MainPage({ user, onLogout }) {
           ],
         },
       ]}
-      width={400}
-      height={200}
-      className='piechart'
+      
       
     />
+            </div>
+  
             </div>
           </div>
         </div>
