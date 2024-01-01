@@ -40,3 +40,15 @@
     transform: rotate(360deg);
   }
 }
+
+.piechart {
+  width: 400px;
+  height: 200px;
+}
+
+@media only screen and (max-width: 600px) {
+  .piechart {
+    width: 100px;
+    height: 50px;
+  }
+}

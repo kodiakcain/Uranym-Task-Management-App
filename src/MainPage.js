@@ -342,6 +342,7 @@ function MainPage({ user, onLogout }) {
       ]}
       width={400}
       height={200}
+      className='piechart'
       
     />
             </div>
