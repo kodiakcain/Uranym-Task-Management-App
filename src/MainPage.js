@@ -11,6 +11,7 @@ import Alert from '@mui/material/Alert';
 import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
+import { PieChart } from '@mui/x-charts/PieChart';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -37,25 +38,38 @@ function MainPage({ user, onLogout }) {
   const [alertSeverity, setAlertSeverity] = useState('success');
   const [alertMessage, setAlertMessage] = useState('');
   const [taskStates, setTaskStates] = useState({});
+  const [count, setCount] = useState(0);
 
   const handleCheckBox = async (taskId) => {
     try {
       const taskRef = doc(db, 'users', userDocumentId, 'data', taskId);
-
+  
       // Use the state updater function to get the most recent state
       setTaskStates((prevStates) => {
-        const updatedStates = { ...prevStates, [taskId]: !prevStates[taskId] };
-
+        // Get the previous state for the current task
+        const prevTaskState = prevStates[taskId];
+  
         // Update the Firestore document with the new state
         updateDoc(taskRef, {
-          isChecked: updatedStates[taskId],
+          isChecked: !prevTaskState,
         });
-
+  
+        // Increment or decrement the count based on the state change
+        if (!prevTaskState) {
+          setCount((prevCount) => prevCount + 1);
+        } else {
+          setCount((prevCount) => prevCount - 1);
+        }
+  
         // Return the updated state
-        return updatedStates;
+        return {
+          ...prevStates,
+          [taskId]: !prevTaskState,
+        };
       });
-
+  
       console.log('Checkbox state updated successfully');
+      await new Promise((resolve) => setTimeout(resolve, 0)); // Await the state update
       readUserData();
     } catch (error) {
       console.error('Error updating checkbox state: ', error);
@@ -98,6 +112,12 @@ function MainPage({ user, onLogout }) {
         selectedDate: doc.data().selectedDate,
         isChecked: doc.data().isChecked,
       }));
+
+        // Calculate the count of checked checkboxes
+      const checkedCount = data.filter((item) => item.isChecked).length;
+
+      // Update the checked count state variable
+      setCount(checkedCount);
       setDocuments(data);
     } catch (error) {
       console.error('Error reading user data from Firestore: ', error);
@@ -210,7 +230,7 @@ function MainPage({ user, onLogout }) {
   }, [userDocumentId, readUserData]);
 
   return (
-    <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', }}>
       <AppBar position="static" sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#171A21', width: '100%' }}>
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -243,6 +263,7 @@ function MainPage({ user, onLogout }) {
         <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', width: '100%' }}>
           <br />
           <br />
+          
           <ul style={{ width: '100%', listStyleType: 'none', padding: 0 }}>
             {documents.map((doc) => (
               <li key={doc.id} style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
@@ -253,7 +274,7 @@ function MainPage({ user, onLogout }) {
                   <input type="checkbox"
                 id={`myCheckbox_${doc.id}`}
                 name={`myCheckbox_${doc.id}`}
-                checked={taskStates[doc.id] || false} // Use taskStates to manage individual checkbox state
+                checked={taskStates[doc.id] || false}
                 onChange={() => handleCheckBox(doc.id)} ></input>
                   </div>
                   <Button
@@ -283,7 +304,8 @@ function MainPage({ user, onLogout }) {
           />
           <div style={{ paddingTop: '30px', flexDirection: 'column', display: 'flex' }}>
             <div style={{ paddingBottom: '10px' }}>
-              <p style={{paddingLeft: '10%'}}>Task Due Date</p>
+              <p style={{paddingLeft: '35%'}}>Task Due Date</p>
+              <div style={{paddingLeft: '32%'}}>
               <input
                 type="date"
                 id="datepicker"
@@ -291,6 +313,7 @@ function MainPage({ user, onLogout }) {
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
               />
+              </div>
             </div>
             <br></br>
             <br></br>
@@ -301,6 +324,27 @@ function MainPage({ user, onLogout }) {
             >
               Add Task
             </Button>
+            <div style={{position: 'fixed',
+              bottom: 0,
+              right: 0,
+              marginRight: '10px',
+              marginBottom: '10px',
+            }}>
+            <PieChart
+      series={[
+        {
+          data: [
+            { id: 0, value: count, label: `Completed: ${count}`, color: 'green' },
+            { id: 1, value: documents.length - count, label: `Incomplete: ${documents.length - count}`, color: 'red' },
+            
+          ],
+        },
+      ]}
+      width={400}
+      height={200}
+      
+    />
+            </div>
           </div>
         </div>
       )}
