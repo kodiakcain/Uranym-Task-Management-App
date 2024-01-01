@@ -324,13 +324,7 @@ function MainPage({ user, onLogout }) {
             >
               Add Task
             </Button>
-            <div style={{position: 'fixed',
-              bottom: 0,
-              right: 0,
-              marginRight: '10px',
-              marginBottom: '10px',
-            }}>
-            <div className='piechart'>
+            <div className='piechart2'>
             <PieChart
       series={[
         {
@@ -344,7 +338,6 @@ function MainPage({ user, onLogout }) {
       
       
     />
-            </div>
   
             </div>
           </div>
