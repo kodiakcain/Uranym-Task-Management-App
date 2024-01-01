@@ -230,7 +230,7 @@ function MainPage({ user, onLogout }) {
   }, [userDocumentId, readUserData]);
 
   return (
-    <div style={{ backgroundColor: ' #eaf2f8 ', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ backgroundColor: ' #f4f6f6 ', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
     <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', }}>
       <AppBar position="static" sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#171A21', width: '100%' }}>
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
@@ -330,8 +330,8 @@ function MainPage({ user, onLogout }) {
       series={[
         {
           data: [
-            { id: 0, value: count, label: `Completed: ${count}`, color: 'green' },
-            { id: 1, value: documents.length - count, label: `Incomplete: ${documents.length - count}`, color: 'red' },
+            { id: 0, value: count, label: `Completed: ${count}`, color: '  #abebc6  ' },
+            { id: 1, value: documents.length - count, label: `Incomplete: ${documents.length - count}`, color: '#f5b7b1' },
             
           ],
         },
