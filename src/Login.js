@@ -18,7 +18,7 @@ function Login({ onLogin }) {
     <div style={{height: '100vh', backgroundColor: '#f4f6f6', alignItems: 'center', justifyContent: 'center'}}>
       <AppBar position="static" sx={{ backgroundColor: '#171A21', width: '100%' }}>
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, paddingLeft: '70px' }}>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, paddingLeft: '47%' }}>
             Uranym
           </Typography>
           <Button
