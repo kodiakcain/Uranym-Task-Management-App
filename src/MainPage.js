@@ -39,33 +39,37 @@ function MainPage({ user, onLogout }) {
   const [alertMessage, setAlertMessage] = useState('');
   const [taskStates, setTaskStates] = useState({});
   const [count, setCount] = useState(0);
-  const [pieChartSeries, setPieChartSeries] = useState([
-    { id: 0, value: 0, label: 'Completed: 0', color: '#abebc6' },
-    { id: 1, value: 0, label: 'Incomplete: 0', color: '#f5b7b1' },
-  ]);
 
   const handleCheckBox = async (taskId) => {
     try {
       const taskRef = doc(db, 'users', userDocumentId, 'data', taskId);
-
+  
+      // Use the state updater function to get the most recent state
       setTaskStates((prevStates) => {
+        // Get the previous state for the current task
         const prevTaskState = prevStates[taskId];
-        const isChecked = !prevTaskState;
-
+  
+        // Update the Firestore document with the new state
         updateDoc(taskRef, {
-          isChecked,
+          isChecked: !prevTaskState,
         });
-
-        setCount((prevCount) => (isChecked ? prevCount + 1 : prevCount - 1));
-
+  
+        // Increment or decrement the count based on the state change
+        if (!prevTaskState) {
+          setCount((prevCount) => prevCount + 1);
+        } else {
+          setCount((prevCount) => prevCount - 1);
+        }
+  
+        // Return the updated state
         return {
           ...prevStates,
-          [taskId]: isChecked,
+          [taskId]: !prevTaskState,
         };
       });
-
+  
       console.log('Checkbox state updated successfully');
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0)); // Await the state update
       readUserData();
     } catch (error) {
       console.error('Error updating checkbox state: ', error);
@@ -75,19 +79,14 @@ function MainPage({ user, onLogout }) {
     }
   };
 
-  useEffect(() => {
-    setPieChartSeries([
-      { id: 0, value: count, label: `Completed: ${count}`, color: '#abebc6' },
-      { id: 1, value: documents.length - count, label: `Incomplete: ${documents.length - count}`, color: '#f5b7b1' },
-    ]);
-  }, [count, documents.length]);
-
+  // Fetch initial data when the component mounts
   useEffect(() => {
     const fetchData = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'users', userDocumentId, 'data'));
         const initialStates = {};
 
+        // Map the initial states based on the data from Firestore
         querySnapshot.forEach((doc) => {
           initialStates[doc.id] = doc.data().isChecked || false;
         });
@@ -103,6 +102,7 @@ function MainPage({ user, onLogout }) {
     }
   }, [userDocumentId]);
 
+
   const readUserData = useCallback(async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'users', userDocumentId, 'data'));
@@ -113,8 +113,10 @@ function MainPage({ user, onLogout }) {
         isChecked: doc.data().isChecked,
       }));
 
+        // Calculate the count of checked checkboxes
       const checkedCount = data.filter((item) => item.isChecked).length;
 
+      // Update the checked count state variable
       setCount(checkedCount);
       setDocuments(data);
     } catch (error) {
@@ -138,6 +140,7 @@ function MainPage({ user, onLogout }) {
   const handleSubmit = async () => {
     try {
       if (userDocumentId) {
+        // Validate inputData length
         if (inputData.length === 0) {
           setAlertSeverity('error');
           setAlertMessage('Task too short. Task must be more than 0 characters.');
@@ -154,22 +157,25 @@ function MainPage({ user, onLogout }) {
           setShowAlert(true);
           return;
         }
-
+  
+        // Check the current number of tasks for the user
         const querySnapshot = await getDocs(collection(db, 'users', userDocumentId, 'data'));
         const currentTaskCount = querySnapshot.size;
-
+  
         if (currentTaskCount >= 11) {
+          // Trigger alert if the user has reached the maximum limit of 10 tasks.
           setAlertSeverity('error');
           setAlertMessage('You have reached the maximum limit of 10 tasks.');
           setShowAlert(true);
         } else {
+          // If the user has not reached the limit, add the new task
           const docRef = await addDoc(collection(db, 'users', userDocumentId, 'data'), {
             inputData,
             selectedDate,
             timestamp: new Date(),
             isChecked: false,
           });
-
+  
           console.log('Document written with ID: ', docRef.id);
           setInputData('');
           setSelectedDate('');
@@ -224,110 +230,121 @@ function MainPage({ user, onLogout }) {
   }, [userDocumentId, readUserData]);
 
   return (
-    <div style={{ backgroundColor: '#f4f6f6', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column' }}>
-        <AppBar position="static" sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#171A21', width: '100%' }}>
-          <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="h6" component="div" sx={{ paddingLeft: '30px' }}>
-                Dashboard
-              </Typography>
-            </div>
-            {profile && <img src={profile.picture} alt="user profile" style={{ width: '50px', height: '50px', borderRadius: '30px' }} />}
-            <div style={{ paddingRight: '30px' }}>
-              <Button
-                variant="contained"
-                style={{ backgroundColor: '#AFB3F7', color: 'black' }}
-                onClick={() => logOut()}
-              >
-                Sign Out
-              </Button>
-            </div>
-          </Toolbar>
-        </AppBar>
+    <div style={{ backgroundColor: ' #f4f6f6 ', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', }}>
+      <AppBar position="static" sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#171A21', width: '100%' }}>
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant="h6" component="div" sx={{ paddingLeft: '30px' }}>
+              Dashboard
+            </Typography>
+          </div>
+          {profile && <img src={profile.picture} alt="user profile" style={{ width: '50px', height: '50px', borderRadius: '30px' }} />}
+          <div style={{ paddingRight: '30px' }}>
+            <Button
+              variant="contained"
+              style={{ backgroundColor: '#AFB3F7', color: 'black' }}
+              onClick={() => logOut()}
+            >
+              Sign Out
+            </Button>
+          </div>
+        </Toolbar>
+      </AppBar>
 
-        {showAlert && (
-          <Alert severity={alertSeverity} onClose={() => setShowAlert(false)}>
-            {alertMessage}
-          </Alert>
-        )}
+      {showAlert && (
+        <Alert severity={alertSeverity} onClose={() => setShowAlert(false)}>
+          {alertMessage}
+        </Alert>
+      )}
 
-        {loading ? (
-          <CircularProgress color="inherit" />
-        ) : (
-          <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', width: '100%' }}>
-            <br />
-            <br />
-
-            <ul style={{ width: '100%', listStyleType: 'none', padding: 0 }}>
-              {documents.map((doc) => (
-                <li key={doc.id} style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-                  <Paper elevation={12} style={{ padding: '10px', textAlign: 'center', width: '50%', flexDirection: 'column', backgroundColor: '#AFB3F7' }}>
-                    <p>{`${doc.inputData}`}</p>
-                    <p>Date: {doc.selectedDate}</p>
-                    <div>
-                      <input
-                        type="checkbox"
-                        id={`myCheckbox_${doc.id}`}
-                        name={`myCheckbox_${doc.id}`}
-                        checked={taskStates[doc.id] || false}
-                        onChange={() => handleCheckBox(doc.id)}
-                      />
-                    </div>
-                    <Button
-                      variant="contained"
-                      style={{ backgroundColor: '#FF6666', color: 'white', marginTop: '10px', width: '4%', fontSize: '10px' }}
-                      onClick={() => handleDelete(doc.id)}
-                    >
-                      Delete
-                    </Button>
-                  </Paper>
-                </li>
-              ))}
-            </ul>
-            <br />
-            <br />
-            <br />
-            <br />
-            <TextField
-              id="outlined-multiline-static"
-              label="Enter Task"
-              multiline
-              rows={4}
-              value={inputData}
-              onChange={(e) => setInputData(e.target.value)}
-              variant="outlined"
-              style={{ width: '50%', display: 'flex', flexDirection: 'column' }}
-            />
-            <div style={{ paddingTop: '30px', flexDirection: 'column', display: 'flex', justifyContent: 'center' }}>
-              <div style={{ paddingBottom: '10px' }}>
-                <p style={{ paddingLeft: '10%', textDecorationLine: 'underline' }}>Task Due Date</p>
-                <div>
-                  <input
-                    type="date"
-                    id="datepicker"
-                    name="datepicker"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                  />
-                </div>
+      {loading ? (
+        <CircularProgress color="inherit" />
+      ) : (
+        <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', width: '100%' }}>
+          <br />
+          <br />
+          
+          <ul style={{ width: '100%', listStyleType: 'none', padding: 0 }}>
+            {documents.map((doc) => (
+              <li key={doc.id} style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+                <Paper elevation={12} style={{ padding: '10px', textAlign: 'center', width: '50%', flexDirection: 'column', backgroundColor: '#AFB3F7' }}>
+                  <p>{`${doc.inputData}`}</p>
+                  <p>Date: {doc.selectedDate}</p>
+                  <div>
+                  <input type="checkbox"
+                id={`myCheckbox_${doc.id}`}
+                name={`myCheckbox_${doc.id}`}
+                checked={taskStates[doc.id] || false}
+                onChange={() => handleCheckBox(doc.id)} ></input>
+                  </div>
+                  <Button
+                    variant="contained"
+                    style={{ backgroundColor: '#FF6666', color: 'white', marginTop: '10px', width: '4%', fontSize: '10px' }}
+                    onClick={() => handleDelete(doc.id)}
+                  >
+                    Delete
+                  </Button>
+                </Paper>
+              </li>
+            ))}
+          </ul>
+          <br />
+          <br />
+          <br />
+          <br />
+          <TextField
+            id="outlined-multiline-static"
+            label="Enter Task"
+            multiline
+            rows={4}
+            value={inputData}
+            onChange={(e) => setInputData(e.target.value)}
+            variant="outlined"
+            style={{ width: '50%', display: 'flex', flexDirection: 'column' }}
+          />
+          <div style={{ paddingTop: '30px', flexDirection: 'column', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ paddingBottom: '10px' }}>
+              <p style={{paddingLeft: '10%', textDecorationLine: 'underline'}}>Task Due Date</p>
+              <div>
+              <input
+                type="date"
+                id="datepicker"
+                name="datepicker"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+              />
               </div>
-              <br></br>
-              <br></br>
-              <Button
-                variant="contained"
-                style={{ backgroundColor: '#AFB3F7', color: 'black' }}
-                onClick={handleSubmit}
-              >
-                Add Task
-              </Button>
-              <div className='piechart2'>
-                <PieChart series={[{ data: pieChartSeries }]} />
-              </div>
+            </div>
+            <br></br>
+            <br></br>
+            <Button
+              variant="contained"
+              style={{ backgroundColor: '#AFB3F7', color: 'black' }}
+              onClick={handleSubmit}
+            >
+              Add Task
+            </Button>
+            <div className='piechart2'>
+            <PieChart
+      series={[
+        {
+          data: [
+            { id: 0, value: count, label: `Completed: ${count}`, color: '  #abebc6  ' },
+            { id: 1, value: documents.length - count, label: `Incomplete: ${documents.length - count}`, color: '#f5b7b1' },
+            
+          ],
+        },
+      ]}
+      
+      
+    />
+  
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
     </div>
   );
 }
