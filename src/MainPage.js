@@ -173,7 +173,7 @@ function MainPage({ user, onLogout }) {
             inputData,
             selectedDate,
             timestamp: new Date(),
-            isChecked : false,
+            isChecked: false,
           });
   
           console.log('Document written with ID: ', docRef.id);
